@@ -1,0 +1,32 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install role dependencies
+      ansible.builtin.package:
+        name:
+          - glib2
+          - gsettings-desktop-schemas
+        state: present
+
+    - name: Ensure the target directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /usr/share/backgrounds
+        - /usr/share/gnome-background-properties
+
+    - name: Plant unmanaged files the role must prune
+      ansible.builtin.copy:
+        dest: "{{ item }}"
+        content: "unmanaged leftover\n"
+        mode: "0644"
+      loop:
+        - /usr/share/backgrounds/stray-magneto.png
+        - /usr/share/gnome-background-properties/sinister.xml
+      loop_control:
+        label: "{{ item }}"

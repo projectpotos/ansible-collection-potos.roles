@@ -1,0 +1,46 @@
+---
+# This collection is initialized by https://github.com/ansible/ansible-creator 26.4.3
+
+# See https://docs.ansible.com/ansible/latest/dev_guide/collections_galaxy_meta.html
+
+namespace: "projectpotos"
+name: "roles"
+version: 0.0.0
+readme: README.md
+authors:
+  - Project Potos <potos@adfinis.com>
+
+description: Various roles to manage a fleet of Linux clients.
+license_file: LICENSE
+
+# TO-DO: update the tags based on your content type
+tags: ["linux", "tools"]
+dependencies: {}
+
+repository: https://github.com/projectpotos/ansible-collection-potos.roles
+documentation: https://potos.dev/docs
+homepage: https://potos.dev
+issues: https://github.com/projectpotos/ansible-collection-potos.roles/issues
+
+# A list of file glob-like patterns used to filter any files or directories that should not be included in the build
+# artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
+# uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
+# and '.git' are always filtered. Mutually exclusive with 'manifest'
+build_ignore:
+  - .gitignore
+  - changelogs/.plugin-cache.yaml
+  - .ansible
+  - .venv
+  - collections
+  - .pytest_cache
+  - .ruff_cache
+  - .task
+  - ansible-creator.log
+  - "*.tar.gz"
+  - "__pycache__"
+# A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
+# list of MANIFEST.in style
+# L(directives,https://packaging.python.org/en/latest/guides/using-manifest-in/#manifest-in-commands). The key
+# 'omit_default_directives' is a boolean that controls whether the default directives are used. Mutually exclusive
+# with 'build_ignore'
+# manifest: null

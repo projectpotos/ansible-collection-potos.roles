@@ -1,0 +1,20 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    # First element becomes the default background for light and dark mode
+    wallpaper_images:
+      - name: Gambit
+        filename: gambit.jpg
+        options: zoom
+        pcolor: "#5d1c4e"
+        scolor: "#5d1c4e"
+        shade_type: solid
+      - name: Rogue
+        filename: rogue.jpg
+  tasks:
+    - name: Run the wallpaper role
+      ansible.builtin.include_role:
+        name: projectpotos.roles.wallpaper

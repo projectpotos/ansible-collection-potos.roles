@@ -1,0 +1,93 @@
+---
+- name: Get os specific facts
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+
+- name: Create background dir
+  ansible.builtin.file:
+    path: /usr/share/backgrounds
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Get Wallpapers to remove
+  ansible.builtin.find:
+    paths: /usr/share/backgrounds
+    file_type: file
+  register: wallpaper_backgrounds
+  changed_when: false
+
+- name: Install wallpapers
+  when:
+    - wallpaper_images is defined
+    - wallpaper_images is iterable
+    - wallpaper_images is not string
+    - (wallpaper_images | length > 0)
+  block:
+    - name: Remove Wallpapers
+      ansible.builtin.file:
+        path: "/usr/share/backgrounds/{{ item }}"
+        state: absent
+      loop: '{{
+          (wallpaper_backgrounds.files |
+          map(attribute="path") |
+          map("regex_replace", "^\/usr\/share\/backgrounds\/(.*)", "\1") |
+          list) |
+          difference(wallpaper_images | map(attribute="filename"))
+          }}'
+
+    - name: Install custom backgrounds
+      ansible.builtin.copy:
+        src: "wallpaper/{{ item.filename }}"
+        dest: "/usr/share/backgrounds/{{ item.filename | basename }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ wallpaper_images }}"
+      loop_control:
+        label: "{{ item.filename }}"
+
+    - name: Set custom default background via gschema override
+      ansible.builtin.template:
+        src: usr/share/glib-2.0/schemas/zz-potos-background.gschema.override
+        dest: "{{ wallpaper_schemas_dir }}/zz-potos-background.gschema.override"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Compile glib schemas
+
+    - name: Ensure background info dir exists
+      ansible.builtin.file:
+        path: /usr/share/gnome-background-properties
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Capture background info files to remote
+      ansible.builtin.find:
+        paths: /usr/share/gnome-background-properties
+        file_type: file
+        excludes:
+          - potos.xml
+      register: wallpaper_backgrounds_properties_toremove
+
+    - name: Delete files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ wallpaper_backgrounds_properties_toremove['files'] }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Deploy backgrounds info file
+      ansible.builtin.template:
+        src: usr/share/gnome-background-properties/potos.xml
+        dest: /usr/share/gnome-background-properties/potos.xml
+        owner: root
+        group: root
+        mode: "0644"

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+{% for bg in wallpaper_images %}
+  <wallpaper>
+    <name>{{ bg.name | default('Wallpaper') }}</name>
+    <filename>/usr/share/backgrounds/{{ bg.filename | basename }}</filename>
+    <options>{{ bg.options | default('zoom') }}</options>
+    <pcolor>{{ bg.pcolor | default('#161b21') }}</pcolor>
+    <scolor>{{ bg.scolor | default('#161b21') }}</scolor>
+    <shade_type>{{ bg.shade_type | default('solid') }}</shade_type>
+  </wallpaper>
+{% endfor %}
+</wallpapers>

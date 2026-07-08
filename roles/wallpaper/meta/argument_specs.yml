@@ -1,0 +1,65 @@
+---
+argument_specs:
+  main:
+    short_description: Role to manage wallpapers of Potos Linux Clients.
+    description:
+      - Installs the given wallpapers into C(/usr/share/backgrounds) and
+        removes any unmanaged files there, registers them in the GNOME
+        wallpaper picker via C(gnome-background-properties), and sets the
+        first image as the system-wide default background through a glib
+        gschema override.
+    options:
+      wallpaper_images:
+        description:
+          - List of files to be found under C(wallpaper/) to be added as
+            background, first element is set as default.
+        type: list
+        elements: dict
+        required: false
+        default: []
+        options:
+          name:
+            description: How the wallpaper is named to the user.
+            type: str
+            required: false
+            default: Wallpaper
+          filename:
+            description: Image file under C(wallpaper/) to install.
+            type: str
+            required: true
+          options:
+            description: Determines how the image is rendered.
+            type: str
+            required: false
+            default: zoom
+            choices:
+              - none
+              - wallpaper
+              - centered
+              - scaled
+              - stretched
+              - zoom
+              - spanned
+          pcolor:
+            description:
+              - Left or top color when drawing gradients, or the solid
+                color (any hex rgb value, e.g. V(#161b21)).
+            type: str
+            required: false
+            default: "#161b21"
+          scolor:
+            description:
+              - Right or bottom color when drawing gradients, not used for
+                solid color (any hex rgb value, e.g. V(#161b21)).
+            type: str
+            required: false
+            default: "#161b21"
+          shade_type:
+            description: How to shade the background color.
+            type: str
+            required: false
+            default: solid
+            choices:
+              - horizontal
+              - vertical
+              - solid

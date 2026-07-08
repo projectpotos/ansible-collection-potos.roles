@@ -1,0 +1,7 @@
+[org.gnome.desktop.background]
+picture-uri='file:///usr/share/backgrounds/{{ wallpaper_images[0].filename | basename }}'
+picture-uri-dark='file:///usr/share/backgrounds/{{ wallpaper_images[0].filename | basename }}'
+picture-options='{{ wallpaper_images[0].options | default("zoom") }}'
+primary-color='{{ wallpaper_images[0].pcolor | default("#161b21") }}'
+secondary-color='{{ wallpaper_images[0].scolor | default("#161b21") }}'
+color-shading-type='{{ wallpaper_images[0].shade_type | default("solid") }}'

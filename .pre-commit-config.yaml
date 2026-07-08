@@ -1,0 +1,62 @@
+---
+repos:
+  - repo: https://github.com/ansible-network/collection_prep
+    rev: 1.1.2
+    hooks:
+      - id: update-docs
+        # collection_prep 1.1.2 breaks on ansible-core >= 2.19 (PosixPath
+        # rejected by the collection loader) and on Python 3.14 (removed
+        # ast.Constant.s), so pin both.
+        language_version: python3.12
+        additional_dependencies:
+          - ansible-core<2.19
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: debug-statements
+      - id: end-of-file-fixer
+      # - id: no-commit-to-branch
+      #   args: [--branch, main]
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v3.0.0"
+    hooks:
+      - id: prettier
+        entry: env CI=1 bash -c "prettier --list-different . || ec=$? && prettier --loglevel=error --write . && exit $ec"
+        pass_filenames: false
+        args: []
+        additional_dependencies:
+          - prettier
+          - prettier-plugin-toml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.17
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: uv-export-test-requirements
+        name: export test group to test-requirements.txt
+        entry: >-
+          uv export --frozen --only-group test --no-hashes --no-annotate
+          --prune ansible-core --quiet --output-file test-requirements.txt
+        language: system
+        files: ^(pyproject\.toml|uv\.lock|test-requirements\.txt)$
+        pass_filenames: false
+      - id: yamllint
+        name: yamllint
+        entry: uv run yamllint
+        language: system
+        types: [yaml]
+      - id: ansible-lint
+        name: ansible-lint
+        entry: uv run ansible-lint --offline
+        language: system
+        pass_filenames: false

@@ -1,0 +1,5 @@
+---
+- name: Compile glib schemas
+  ansible.builtin.command:
+    cmd: "glib-compile-schemas {{ wallpaper_schemas_dir }}"
+  changed_when: true

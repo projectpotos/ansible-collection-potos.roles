@@ -1,0 +1,75 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Stat the artifacts the role installs
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/share/backgrounds/gambit.jpg
+        - /usr/share/backgrounds/rogue.jpg
+        - /usr/share/gnome-background-properties/potos.xml
+        - /usr/share/glib-2.0/schemas/zz-potos-background.gschema.override
+      register: wallpaper_artifacts
+
+    - name: All expected artifacts exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "missing expected artifact: {{ item.item }}"
+      loop: "{{ wallpaper_artifacts.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Stat the unmanaged files planted by prepare
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/share/backgrounds/stray-magneto.png
+        - /usr/share/gnome-background-properties/sinister.xml
+      register: wallpaper_strays
+
+    - name: Unmanaged files were pruned
+      ansible.builtin.assert:
+        that:
+          - not item.stat.exists
+        fail_msg: "unmanaged file was not removed: {{ item.item }}"
+      loop: "{{ wallpaper_strays.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Read the backgrounds info file
+      ansible.builtin.slurp:
+        src: /usr/share/gnome-background-properties/potos.xml
+      register: wallpaper_potos_xml
+
+    - name: Both wallpapers are registered in the GNOME picker
+      ansible.builtin.assert:
+        that:
+          - "'<name>Gambit</name>' in wallpaper_potos_xml.content | b64decode"
+          - "'/usr/share/backgrounds/gambit.jpg' in wallpaper_potos_xml.content | b64decode"
+          - "'<name>Rogue</name>' in wallpaper_potos_xml.content | b64decode"
+          - "'/usr/share/backgrounds/rogue.jpg' in wallpaper_potos_xml.content | b64decode"
+
+    - name: Query the compiled default background (light and dark)
+      ansible.builtin.command:
+        cmd: "gsettings get org.gnome.desktop.background {{ item }}"
+      environment:
+        # the memory backend returns schema defaults without needing dconf/dbus
+        GSETTINGS_BACKEND: memory
+      loop:
+        - picture-uri
+        - picture-uri-dark
+      register: wallpaper_gsettings
+      changed_when: false
+
+    - name: The gschema override took effect for both modes
+      ansible.builtin.assert:
+        that:
+          - item.stdout == "'file:///usr/share/backgrounds/gambit.jpg'"
+        fail_msg: "{{ item.item }} is {{ item.stdout }} instead of the Gambit wallpaper"
+      loop: "{{ wallpaper_gsettings.results }}"
+      loop_control:
+        label: "{{ item.item }}"

@@ -1,0 +1,8 @@
+---
+skip_list:
+  - name[casing]
+
+warn_list:
+  - command-instead-of-shell
+  - literal-compare
+  - no-changed-when
