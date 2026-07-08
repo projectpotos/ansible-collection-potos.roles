@@ -4,6 +4,8 @@
   become: true
   gather_facts: true
   vars:
+    # Pruning of unmanaged wallpapers stays at its default (off) here,
+    # side_effect.yml reruns the role with it turned on
     # First element becomes the default background for light and dark mode
     wallpaper_images:
       - name: Gambit

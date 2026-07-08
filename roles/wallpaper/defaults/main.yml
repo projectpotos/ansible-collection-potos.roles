@@ -2,3 +2,7 @@
 # List of files to be found under `wallpaper` to be added as background,
 # first element is set as default
 wallpaper_images: []
+
+# Opt-in: also remove wallpapers not listed in `wallpaper_images` from
+# /usr/share/backgrounds and unregister them from the GNOME wallpaper picker
+wallpaper_remove_unmanaged: false

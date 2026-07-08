@@ -1,0 +1,39 @@
+---
+- name: Side effect
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    wallpaper_remove_unmanaged: true
+    # Same images as converge.yml, first element is the default background
+    wallpaper_images:
+      - name: Gambit
+        filename: gambit.jpg
+        options: zoom
+        pcolor: "#5d1c4e"
+        scolor: "#5d1c4e"
+        shade_type: solid
+      # test with absolute path, same as the specs repo would
+      - name: Rogue
+        filename: "{{ playbook_dir }}/files/wallpaper/rogue.jpg"
+  tasks:
+    - name: Stat the unmanaged files planted by prepare
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/share/backgrounds/stray-magneto.png
+        - /usr/share/gnome-background-properties/sinister.xml
+      register: wallpaper_strays
+
+    - name: Converge with pruning off left the unmanaged files alone
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "unmanaged file was removed despite wallpaper_remove_unmanaged=false: {{ item.item }}"
+      loop: "{{ wallpaper_strays.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Run the wallpaper role with pruning enabled
+      ansible.builtin.include_role:
+        name: projectpotos.roles.wallpaper

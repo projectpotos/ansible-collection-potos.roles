@@ -2,12 +2,18 @@
 
 Role to manage wallpapers of Potos Linux Clients.
 
-Installs the images listed in `wallpaper_images` into `/usr/share/backgrounds`
-(pruning any unmanaged files there), registers them in the GNOME wallpaper
-picker via `/usr/share/gnome-background-properties/potos.xml`, and sets the
-first image as the system-wide default background for light and dark mode
-through a glib gschema override
+Installs the images listed in `wallpaper_images` into `/usr/share/backgrounds`,
+registers them in the GNOME wallpaper picker via
+`/usr/share/gnome-background-properties/potos.xml`, and sets the first image
+as the system-wide default background for light and dark mode through a glib
+gschema override
 (`/usr/share/glib-2.0/schemas/zz-potos-background.gschema.override`).
+
+Pruning unmanaged wallpapers is opt-in: with
+`wallpaper_remove_unmanaged: true` any files in `/usr/share/backgrounds` not
+listed in `wallpaper_images` are removed and their GNOME picker entries under
+`/usr/share/gnome-background-properties` are deleted. By default other
+wallpapers are left untouched and stay selectable in the picker.
 
 ## Example Playbook
 
@@ -35,6 +41,10 @@ The default variables are defined in [defaults/main.yml](./defaults/main.yml):
 # List of files to be found under `wallpaper` to be added as background,
 # first element is set as default
 wallpaper_images: []
+
+# Opt-in: also remove wallpapers not listed in `wallpaper_images` from
+# /usr/share/backgrounds and unregister them from the GNOME wallpaper picker
+wallpaper_remove_unmanaged: false
 ```
 
 ### Example

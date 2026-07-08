@@ -14,13 +14,6 @@
     group: root
     mode: "0755"
 
-- name: Get Wallpapers to remove
-  ansible.builtin.find:
-    paths: /usr/share/backgrounds
-    file_type: file
-  register: wallpaper_backgrounds
-  changed_when: false
-
 - name: Install wallpapers
   when:
     - wallpaper_images is defined
@@ -28,17 +21,27 @@
     - wallpaper_images is not string
     - (wallpaper_images | length > 0)
   block:
-    - name: Remove Wallpapers
-      ansible.builtin.file:
-        path: "/usr/share/backgrounds/{{ item }}"
-        state: absent
-      loop: '{{
-          (wallpaper_backgrounds.files |
-          map(attribute="path") |
-          map("regex_replace", "^\/usr\/share\/backgrounds\/(.*)", "\1") |
-          list) |
-          difference(wallpaper_images | map(attribute="filename") | map("basename"))
-          }}'
+    - name: Remove unmanaged wallpapers
+      when: wallpaper_remove_unmanaged | bool
+      block:
+        - name: Get Wallpapers to remove
+          ansible.builtin.find:
+            paths: /usr/share/backgrounds
+            file_type: file
+          register: wallpaper_backgrounds
+          changed_when: false
+
+        - name: Remove Wallpapers
+          ansible.builtin.file:
+            path: "/usr/share/backgrounds/{{ item }}"
+            state: absent
+          loop: '{{
+            (wallpaper_backgrounds.files |
+            map(attribute="path") |
+            map("regex_replace", "^\/usr\/share\/backgrounds\/(.*)", "\1") |
+            list) |
+            difference(wallpaper_images | map(attribute="filename") | map("basename"))
+            }}'
 
     - name: Install custom backgrounds
       ansible.builtin.copy:
@@ -69,21 +72,24 @@
         group: root
         mode: "0755"
 
-    - name: Capture background info files to remote
-      ansible.builtin.find:
-        paths: /usr/share/gnome-background-properties
-        file_type: file
-        excludes:
-          - potos.xml
-      register: wallpaper_backgrounds_properties_toremove
+    - name: Remove unmanaged background info files
+      when: wallpaper_remove_unmanaged | bool
+      block:
+        - name: Capture background info files to remote
+          ansible.builtin.find:
+            paths: /usr/share/gnome-background-properties
+            file_type: file
+            excludes:
+              - potos.xml
+          register: wallpaper_backgrounds_properties_toremove
 
-    - name: Delete files
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: absent
-      loop: "{{ wallpaper_backgrounds_properties_toremove['files'] }}"
-      loop_control:
-        label: "{{ item.path }}"
+        - name: Delete files
+          ansible.builtin.file:
+            path: "{{ item.path }}"
+            state: absent
+          loop: "{{ wallpaper_backgrounds_properties_toremove['files'] }}"
+          loop_control:
+            label: "{{ item.path }}"
 
     - name: Deploy backgrounds info file
       ansible.builtin.template:

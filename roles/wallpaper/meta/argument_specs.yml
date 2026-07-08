@@ -3,12 +3,24 @@ argument_specs:
   main:
     short_description: Role to manage wallpapers of Potos Linux Clients.
     description:
-      - Installs the given wallpapers into C(/usr/share/backgrounds) and
-        removes any unmanaged files there, registers them in the GNOME
-        wallpaper picker via C(gnome-background-properties), and sets the
-        first image as the system-wide default background through a glib
-        gschema override.
+      - Installs the given wallpapers into C(/usr/share/backgrounds),
+        registers them in the GNOME wallpaper picker via
+        C(gnome-background-properties), and sets the first image as the
+        system-wide default background through a glib gschema override.
+        Optionally removes any unmanaged wallpapers and picker entries.
+        (O(wallpaper_remove_unmanaged))
+
     options:
+      wallpaper_remove_unmanaged:
+        description:
+          - Opt-in. When V(true), wallpapers not listed in
+            O(wallpaper_images) are removed from C(/usr/share/backgrounds)
+            and their entries in
+            C(/usr/share/gnome-background-properties) are deleted, so only
+            the managed wallpapers remain in the GNOME picker.
+        type: bool
+        required: false
+        default: false
       wallpaper_images:
         description:
           - List of files to be found under C(wallpaper/) to be added as
