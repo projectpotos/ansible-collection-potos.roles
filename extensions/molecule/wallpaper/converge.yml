@@ -12,8 +12,9 @@
         pcolor: "#5d1c4e"
         scolor: "#5d1c4e"
         shade_type: solid
+      # test with absolute path,same as the specs repo would
       - name: Rogue
-        filename: rogue.jpg
+        filename: "{{ playbook_dir }}/files/wallpaper/rogue.jpg"
   tasks:
     - name: Run the wallpaper role
       ansible.builtin.include_role:
