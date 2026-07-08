@@ -52,7 +52,7 @@ wallpaper_images:
 | variable   | Possible values                                                           | Description                                                             |
 |------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | name       |                                                                           | How the wallpaper is named to the user                                  |
-| filename   |                                                                           | Image file under `wallpaper/` to install                                |
+| filename   |                                                                           | Image file to install: a name looked up under `wallpaper/`, or an absolute path on the potos host |
 | options    | "none", "wallpaper", "centered", "scaled", "stretched", "zoom", "spanned" | Determines how the image is rendered                                    |
 | pcolor     | any hex rgb value e.g. #161b21                                            | Left or top color when drawing gradients, or the solid color.           |
 | scolor     | any hex rgb value e.g. #161b21                                            | Right or bottom color when drawing gradients, not used for solid color. |
@@ -67,4 +67,6 @@ ansible-doc --type role projectpotos.roles.wallpaper
 ## Requirements
 
 Files listed under `wallpaper_images` need to exist under `wallpaper/` in the
-playbook's file search path.
+playbook's file search path, or be given as absolute paths on the potos host
+(e.g. `/var/lib/potos/specs/files/wallpaper/potos.png` when the specs repo
+ships them).

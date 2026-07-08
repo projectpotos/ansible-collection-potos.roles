@@ -37,12 +37,13 @@
           map(attribute="path") |
           map("regex_replace", "^\/usr\/share\/backgrounds\/(.*)", "\1") |
           list) |
-          difference(wallpaper_images | map(attribute="filename"))
+          difference(wallpaper_images | map(attribute="filename") | map("basename"))
           }}'
 
     - name: Install custom backgrounds
       ansible.builtin.copy:
-        src: "wallpaper/{{ item.filename }}"
+        # absolute filenames are used as-is (e.g. from the specs clone)
+        src: "{{ item.filename if item.filename.startswith('/') else 'wallpaper/' ~ item.filename }}"
         dest: "/usr/share/backgrounds/{{ item.filename | basename }}"
         owner: root
         group: root

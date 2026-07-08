@@ -24,7 +24,11 @@ argument_specs:
             required: false
             default: Wallpaper
           filename:
-            description: Image file under C(wallpaper/) to install.
+            description:
+              - Image file to install. Either a filename looked up under
+                C(wallpaper/) in the playbook's file search path, or an
+                absolute path on the potos host, e.g.
+                V(/var/lib/potos/specs/files/wallpaper/potos.png).
             type: str
             required: true
           options:
