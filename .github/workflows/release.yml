@@ -1,18 +1,12 @@
 ---
 name: Release projectpotos.roles
 
+# The version bump and changelog land on main through a release PR
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to release (without leading v), e.g. 1.2.3"
-        required: true
-        type: string
 
-permissions:
-  contents: write
+permissions: {}
 
 concurrency:
   group: release-${{ github.ref }}
@@ -20,79 +14,8 @@ concurrency:
 
 jobs:
   release:
-    name: Build and publish to Galaxy
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: true # needed for pushing back to the repo
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          enable-cache: false
-
-      - name: Resolve release version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${INPUTS_VERSION}"
-          else
-            VERSION="${GITHUB_REF_NAME#v}"
-          fi
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+'; then
-            echo "::error::'$VERSION' is not a valid semantic version" >&2
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Releasing version $VERSION"
-        env:
-          INPUTS_VERSION: ${{ inputs.version }}
-
-      - name: Set galaxy.yml version from tag
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          sed -i -E "s/^version:.*/version: ${VERSION}/" galaxy.yml
-          grep -E '^version:' galaxy.yml
-
-      - name: Regenerate changelog for the release
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: uv run --frozen antsibull-changelog release --version "${VERSION}"
-
-      - name: Build the collection
-        run: uv run --frozen ansible-galaxy collection build --force --output-path dist
-
-      - name: Publish the collection on Galaxy
-        env:
-          ANSIBLE_GALAXY_API_KEY: ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
-        run: |
-          [ -n "${ANSIBLE_GALAXY_API_KEY}" ] || {
-            echo "::error::ANSIBLE_GALAXY_API_KEY is required to publish" >&2
-            exit 1
-          }
-          TARBALL=$(ls -1 dist/*.tar.gz)
-          uv run --frozen ansible-galaxy collection publish "${TARBALL}" \
-            --api-key "${ANSIBLE_GALAXY_API_KEY}"
-
-      - name: Commit the changes back to the repository
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
-          git add galaxy.yml CHANGELOG.rst changelogs/
-          git commit -m "Release version ${{ steps.version.outputs.version }}" || echo "No changes to commit"
-          git push origin main || echo "No changes to push"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload built collection artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: projectpotos-roles-${{ steps.version.outputs.version }}
-          path: dist/*.tar.gz
-          if-no-files-found: error
+    permissions:
+      contents: read
+    uses: projectpotos/actions/.github/workflows/release-ansible-collection.yaml@cc9fa23313351dbc2443f830da4a111f96d293c6 # v0.2.2
+    secrets:
+      ANSIBLE_GALAXY_API_KEY: ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
