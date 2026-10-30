@@ -1,6 +1,22 @@
 ---
-# tasks file for projectpotos.roles.netbird
+- name: Configure the NetBird package repository
+  ansible.builtin.yum_repository:
+    name: netbird
+    file: netbird
+    description: NetBird
+    baseurl: "{{ netbird_repo_baseurl }}"
+    gpgkey: "{{ netbird_repo_gpgkey }}"
+    gpgcheck: "{{ netbird_repo_gpgcheck | bool }}"
+    repo_gpgcheck: "{{ netbird_repo_repo_gpgcheck | bool }}"
+    enabled: true
 
-- name: Display the value of netbird_my_variable
-  ansible.builtin.debug:
-    msg: "The value of netbird_my_variable is {{ netbird_my_variable }}"
+- name: Install NetBird
+  ansible.builtin.dnf:
+    name: "{{ netbird_packages }}"
+    state: present
+
+- name: Enable and start the NetBird service
+  ansible.builtin.systemd_service:
+    name: netbird
+    enabled: true
+    state: started
