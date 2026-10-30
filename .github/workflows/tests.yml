@@ -20,7 +20,7 @@ jobs:
       contents: read
     uses: projectpotos/actions/.github/workflows/test-ansible-collection.yaml@60001bf86fe665f84dfaedd1f6bc03073a11bea5 # v0.8.0
     with:
-      molecule-scenarios: '["wallpaper"]'
+      molecule-scenarios: '["wallpaper", "netbird"]'
       shellcheck-jinja: true
 
   all_green:

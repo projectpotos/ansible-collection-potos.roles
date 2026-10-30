@@ -1,6 +1,14 @@
 ---
-# defaults file for projectpotos.roles.netbird
+# Package repository
+netbird_repo_baseurl: https://pkgs.netbird.io/yum/
+netbird_repo_gpgkey: https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+netbird_repo_gpgcheck: true
+netbird_repo_repo_gpgcheck: true
 
-# Variable that will be displayed in debug output
-# This demonstrates proper role variable naming with the 'netbird_' prefix
-netbird_my_variable: "default_value"
+# Packages to install
+netbird_packages:
+  - netbird
+  - netbird-ui
+  - gtk4
+  - webkitgtk6.0
+  - xdg-utils

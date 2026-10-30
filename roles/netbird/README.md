@@ -1,78 +1,69 @@
-# projectpotos.roles netbird Role
+# netbird
 
-A brief description of the role goes here.
+Role to install the NetBird client on Potos Linux Clients.
 
-## Requirements
+Configures the NetBird package repository in `/etc/yum.repos.d/netbird.repo`,
+installs the packages listed in `netbird_packages` and enables the `netbird`
+service.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
-
-## Role Variables
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-## Dependencies
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 ## Example Playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
 ```yaml
-- name: Execute tasks on servers
-  hosts: servers
-  roles:
-    - role: projectpotos.roles.netbird
-      netbird_my_variable: "custom_value"
-```
-
-Another way to consume this role would be:
-
-```yaml
-- name: Initialize the netbird role from projectpotos.roles
-  hosts: servers
-  gather_facts: false
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
   tasks:
-    - name: Trigger invocation of netbird role
+    - name: Run the netbird role
       ansible.builtin.include_role:
         name: projectpotos.roles.netbird
-      vars:
-        netbird_my_variable: "custom_value"
 ```
 
-## Role Idempotency
+## Role Variables
 
-Designation of the role as idempotent (True/False)
-
-## Role Atomicity
-
-Designation of the role as atomic if applicable (True/False)
-
-## Roll-back capabilities
-
-Define the roll-back capabilities of the role
-
-## Argument Specification
-
-Including an example of how to add an argument Specification file that validates the arguments provided to the role.
+The default variables are defined in [defaults/main.yml](./defaults/main.yml):
 
 ```yaml
-argument_specs:
-  main:
-    short_description: Role description.
-    options:
-      string_arg1:
-        description: string argument description.
-        type: "str"
-        default: "x"
-        choices: ["x", "y"]
+# Package repository, override to use a mirror
+netbird_repo_baseurl: https://pkgs.netbird.io/yum/
+netbird_repo_gpgkey: https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+netbird_repo_gpgcheck: true
+netbird_repo_repo_gpgcheck: true
+
+# Packages to install, the desktop client needs gtk4, webkitgtk6.0 and xdg-utils
+netbird_packages:
+  - netbird
+  - netbird-ui
+  - gtk4
+  - webkitgtk6.0
+  - xdg-utils
 ```
 
-## License
+### Example
 
-<!-- TO-DO: Update the license to the one you want to use (delete this line after setting the license) -->
-BSD
+```yaml
+netbird_repo_baseurl: https://mirror.company.example/netbird/yum/
+netbird_repo_gpgkey: https://mirror.company.example/netbird/yum/repodata/repomd.xml.key
+netbird_packages:
+  - netbird
+```
 
-## Author Information
+| variable                   | Possible values | Description                                                              |
+|----------------------------|-----------------|--------------------------------------------------------------------------|
+| netbird_repo_baseurl       | URL             | Base URL of the NetBird package repository                               |
+| netbird_repo_gpgkey        | URL             | GPG key the repository is signed with                                    |
+| netbird_repo_gpgcheck      | true, false     | Verify package signatures                                                |
+| netbird_repo_repo_gpgcheck | true, false     | Verify repository metadata signatures                                    |
+| netbird_packages           | list of str     | Packages to install, e.g. `netbird-ui-gtk3` or `network-manager-netbird` |
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Another option is to use `ansible-doc` to read the argument specification:
+
+```sh
+ansible-doc --type role projectpotos.roles.netbird
+```
+
+## Requirements
+
+The potos host needs to reach `netbird_repo_baseurl` to download the packages.

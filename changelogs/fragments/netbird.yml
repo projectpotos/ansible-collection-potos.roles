@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - netbird - new role that configures the NetBird package repository, installs the client and enables its service.

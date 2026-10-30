@@ -1,11 +1,43 @@
 ---
-# argument spec file for projectpotos.roles.netbird
-
 argument_specs:
   main:
-    short_description: Role description.
+    short_description: Role to install the NetBird client on Potos Linux Clients.
+    description:
+      - Configures the NetBird package repository in
+        C(/etc/yum.repos.d/netbird.repo), installs the packages listed in
+        O(netbird_packages) and enables the C(netbird) service.
+
     options:
-      netbird_my_variable:
+      netbird_repo_baseurl:
+        description: Base URL of the NetBird package repository.
         type: str
-        description: A simple string argument for demonstration.
-        default: "default_value"
+        required: false
+        default: https://pkgs.netbird.io/yum/
+      netbird_repo_gpgkey:
+        description: URL of the GPG key the repository is signed with.
+        type: str
+        required: false
+        default: https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+      netbird_repo_gpgcheck:
+        description: Verify package signatures.
+        type: bool
+        required: false
+        default: true
+      netbird_repo_repo_gpgcheck:
+        description: Verify repository metadata signatures.
+        type: bool
+        required: false
+        default: true
+      netbird_packages:
+        description:
+          - Packages to install. The desktop client V(netbird-ui) needs
+            C(gtk4), C(webkitgtk6.0) and C(xdg-utils).
+        type: list
+        elements: str
+        required: false
+        default:
+          - netbird
+          - netbird-ui
+          - gtk4
+          - webkitgtk6.0
+          - xdg-utils
