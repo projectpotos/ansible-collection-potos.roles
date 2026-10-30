@@ -1,0 +1,17 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Query netbird service
+      ansible.builtin.systemd:
+        name: netbird.service
+      register: netbird_service_state
+      changed_when: false
+
+    - name: Service must be enabled
+      ansible.builtin.assert:
+        that:
+          - netbird_service_state.status.UnitFileState == 'enabled'
+        fail_msg: "netbird service should be enabled"
