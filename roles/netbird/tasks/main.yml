@@ -1,0 +1,6 @@
+---
+# tasks file for projectpotos.roles.netbird
+
+- name: Display the value of netbird_my_variable
+  ansible.builtin.debug:
+    msg: "The value of netbird_my_variable is {{ netbird_my_variable }}"
