@@ -1,10 +1,12 @@
 ---
 name: Release projectpotos.roles
 
-# The version bump and changelog land on main through a release PR
+# The version bump and changelog land on main through the pull request opened
+# by draft-release.yml; publishing the draft release triggers this workflow,
+# which only builds and publishes the collection.
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
 
 permissions: {}
 
