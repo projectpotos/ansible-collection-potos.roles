@@ -1,0 +1,66 @@
+---
+name-template: v$RESOLVED_VERSION
+tag-template: v$RESOLVED_VERSION
+
+# Each category matches on the conventional-commit title or on the label
+# the autolabeler derives from it, so the check-pr action passes before the
+# labels exist and hand-labelled pull requests pass without a conventional title.
+categories:
+  - title: Breaking Changes
+    semver-increment: major
+    when:
+      - conventional:
+          breaking: true
+      - label: major
+  - title: Features
+    semver-increment: minor
+    when:
+      - conventional:
+          types: [feat, perf]
+      - labels: [feature, enhancement]
+  - title: Bugfixes
+    semver-increment: patch
+    when:
+      - conventional:
+          type: fix
+      - label: bug
+  - title: Deprecations
+    semver-increment: minor
+    when:
+      label: deprecated
+  - title: Maintenance
+    semver-increment: patch
+    when:
+      - conventional:
+          types: [refactor, style]
+      - label: refactoring
+  - type: pre-exclude
+    when:
+      - conventional:
+          types: [chore, ci, test, build, docs]
+      - label: skip-changelog
+  - type: version-resolver
+    semver-increment: patch
+
+sync-labels: true
+autolabeler:
+  - label: major
+    title: ['/^[a-z]+(\(.+\))?!:/']
+  - label: enhancement
+    title: ['/^(feat|perf)(\(.+\))?:/']
+  - label: bug
+    title: ['/^fix(\(.+\))?:/']
+  - label: refactoring
+    title: ['/^(refactor|style)(\(.+\))?:/']
+  - label: skip-changelog
+    title: ['/^(chore|ci|test|build|docs)(\(.+\))?:/']
+
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+change-title-escapes: '\<*_&'
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
