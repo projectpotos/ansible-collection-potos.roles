@@ -1,3 +1,4 @@
 ---
 # collection dependencies for tests
-collections: []
+collections:
+  - name: containers.podman
