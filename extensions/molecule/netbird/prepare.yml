@@ -1,0 +1,25 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install NetworkManager
+      ansible.builtin.package:
+        name: NetworkManager
+        state: present
+
+    - name: Start NetworkManager
+      ansible.builtin.systemd_service:
+        name: NetworkManager
+        state: started
+
+    - name: Create the users of the machine
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+      loop:
+        - name: storm
+          uid: 1001
+        - name: nightcrawler
+          uid: 1000

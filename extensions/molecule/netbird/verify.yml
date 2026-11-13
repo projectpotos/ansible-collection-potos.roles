@@ -3,6 +3,13 @@
   hosts: all
   become: true
   gather_facts: false
+  vars:
+    netbird_profile: nm-5c33fb92-d200-48ba-8eba-5b6c0a9302c8
+  module_defaults:
+    ansible.builtin.uri:
+      unix_socket: /var/run/netbird-http.sock
+      method: POST
+      body_format: json
   tasks:
     - name: Query netbird service
       ansible.builtin.systemd:
@@ -10,8 +17,72 @@
       register: netbird_service_state
       changed_when: false
 
-    - name: Service must be enabled
+    - name: Service must be enabled and running
       ansible.builtin.assert:
         that:
           - netbird_service_state.status.UnitFileState == 'enabled'
-        fail_msg: "netbird service should be enabled"
+          - netbird_service_state.status.ActiveState == 'active'
+
+    - name: Query the NetworkManager connection
+      ansible.builtin.command:
+        cmd: nmcli --terse --fields connection.uuid,connection.type,connection.permissions,vpn.service-type,vpn.data connection show NetBird
+      register: netbird_connection
+      changed_when: false
+
+    - name: NetworkManager must know the connection of the user
+      ansible.builtin.assert:
+        that:
+          - "'connection.uuid:5c33fb92-d200-48ba-8eba-5b6c0a9302c8' in netbird_connection.stdout_lines"
+          - "'connection.type:vpn' in netbird_connection.stdout_lines"
+          - "'connection.permissions:user:storm' in netbird_connection.stdout_lines"
+          - "'vpn.service-type:org.freedesktop.NetworkManager.netbird' in netbird_connection.stdout_lines"
+          - "'auth = sso' in netbird_connection.stdout"
+          - "'management-url = https://netbird.example.invalid' in netbird_connection.stdout"
+          - "'admin-url = https://netbird.example.invalid' in netbird_connection.stdout"
+          - "'username = storm' in netbird_connection.stdout"
+
+    - name: Connection file must be private
+      ansible.builtin.stat:
+        path: /etc/NetworkManager/system-connections/netbird.nmconnection
+      register: netbird_connection_file
+      failed_when: netbird_connection_file.stat.mode != '0600' or netbird_connection_file.stat.pw_name != 'root'
+
+    - name: Query the NetBird profiles
+      ansible.builtin.uri:
+        url: http://localhost/daemon.DaemonService/ListProfiles
+        body: {}
+      register: netbird_profiles
+
+    - name: Profile of the connection must exist once and belong to the user
+      ansible.builtin.assert:
+        that:
+          - netbird_profiles.json.profiles | selectattr('name', 'eq', netbird_profile) | length == 1
+          - (netbird_profiles.json.profiles | selectattr('name', 'eq', netbird_profile) | first).owners == ['uid:1001']
+
+    - name: Query the NetBird profile settings
+      ansible.builtin.uri:
+        url: http://localhost/daemon.DaemonService/GetConfig
+        body:
+          profileName: "{{ netbird_profile }}"
+      register: netbird_profile_config
+
+    - name: Profile must carry the managed settings
+      ansible.builtin.assert:
+        that:
+          - netbird_profile_config.json.managementUrl == 'https://netbird.example.invalid:443'
+          - netbird_profile_config.json.blockLanAccess
+          - netbird_profile_config.json.blockInbound
+          - netbird_profile_config.json.wireguardPort | int == 51821
+
+    - name: Query the profiles the user can see
+      ansible.builtin.command:
+        cmd: netbird profile list
+      become: true
+      become_user: storm
+      register: netbird_user_profiles
+      changed_when: false
+
+    - name: User must see the profile
+      ansible.builtin.assert:
+        that:
+          - netbird_profile in netbird_user_profiles.stdout

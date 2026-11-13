@@ -1,0 +1,44 @@
+---
+- name: Side effect
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Query the NetBird profiles
+      ansible.builtin.uri:
+        unix_socket: /var/run/netbird-http.sock
+        url: http://localhost/daemon.DaemonService/ListProfiles
+        method: POST
+        body_format: json
+        body: {}
+      register: netbird_profiles
+
+    - name: Profile must belong to the first regular user by default
+      ansible.builtin.assert:
+        that:
+          - >-
+            (netbird_profiles.json.profiles
+            | selectattr('name', 'eq', 'nm-5c33fb92-d200-48ba-8eba-5b6c0a9302c8') | first).owners == ['uid:1000']
+
+    - name: Let the user loosen a managed setting
+      ansible.builtin.uri:
+        unix_socket: /var/run/netbird-http.sock
+        url: http://localhost/daemon.DaemonService/SetConfig
+        method: POST
+        body_format: json
+        body:
+          profileName: nm-5c33fb92-d200-48ba-8eba-5b6c0a9302c8
+          blockLanAccess: false
+
+    - name: Rerun the netbird role for another user
+      ansible.builtin.include_role:
+        name: projectpotos.roles.netbird
+      vars:
+        netbird_management_url: https://netbird.example.invalid
+        netbird_admin_url: https://netbird.example.invalid
+        netbird_nm_uid: 1001
+        netbird_profile_settings:
+          blockLanAccess: true
+          blockInbound: true
+          wireguardPort: 51821
+          disableFirewall: true
