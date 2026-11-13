@@ -83,18 +83,18 @@ argument_specs:
         default: 5c33fb92-d200-48ba-8eba-5b6c0a9302c8
       netbird_nm_username:
         description:
-          - Name of the user who may use the NetworkManager connection and
+          - Name of the user the NetworkManager connection logs in for and who
             owns the NetBird profile.
           - When O(netbird_nm_username) and O(netbird_nm_uid) are empty, the
             regular user (UID 1000 to 59999) with the lowest UID is used.
-          - Without a matching user the connection is open to all users and
-            the profile stays with root until the next run.
+          - Without a matching user the profile stays with root until the next
+            run.
         type: str
         required: false
         default: ""
       netbird_nm_uid:
         description:
-          - UID of the user who may use the NetworkManager connection and
+          - UID of the user the NetworkManager connection logs in for and who
             owns the NetBird profile, for example V(1000) for the first user
             of every machine.
           - Ignored when O(netbird_nm_username) is set.

@@ -34,7 +34,7 @@
         that:
           - "'connection.uuid:5c33fb92-d200-48ba-8eba-5b6c0a9302c8' in netbird_connection.stdout_lines"
           - "'connection.type:vpn' in netbird_connection.stdout_lines"
-          - "'connection.permissions:user:storm' in netbird_connection.stdout_lines"
+          - "'connection.permissions:' in netbird_connection.stdout_lines"
           - "'vpn.service-type:org.freedesktop.NetworkManager.netbird' in netbird_connection.stdout_lines"
           - "'auth = sso' in netbird_connection.stdout"
           - "'management-url = https://netbird.example.invalid' in netbird_connection.stdout"
@@ -46,6 +46,32 @@
         path: /etc/NetworkManager/system-connections/netbird.nmconnection
       register: netbird_connection_file
       failed_when: netbird_connection_file.stat.mode != '0600' or netbird_connection_file.stat.pw_name != 'root'
+
+    - name: Query the network devices
+      ansible.builtin.command:
+        cmd: nmcli --terse --fields DEVICE,TYPE device
+      register: netbird_devices
+      changed_when: false
+
+    - name: Activate the connection, the login cannot succeed without a server
+      ansible.builtin.command:
+        argv:
+          - nmcli
+          - connection
+          - up
+          - NetBird
+          - ifname
+          - "{{ (netbird_devices.stdout_lines | reject('search', ':loopback$') | first).split(':') | first }}"
+      register: netbird_activation
+      changed_when: false
+      failed_when: false
+      timeout: 60
+
+    - name: NetworkManager must hand the activation to the NetBird plugin
+      ansible.builtin.assert:
+        that:
+          - "'was not installed' not in netbird_activation.stderr"
+          - "'private connections' not in netbird_activation.stderr"
 
     - name: Query the NetBird profiles
       ansible.builtin.uri:

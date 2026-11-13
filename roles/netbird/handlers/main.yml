@@ -1,4 +1,11 @@
 ---
+- name: Restart NetworkManager
+  ansible.builtin.systemd_service:
+    name: NetworkManager
+    state: restarted
+  when: netbird_network_manager | bool
+  listen: restart_nm
+
 - name: Reload NetworkManager connections
   ansible.builtin.command:
     cmd: nmcli connection reload

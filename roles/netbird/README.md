@@ -111,11 +111,6 @@ The role resolves the user in this order:
    user of every machine
 3. the regular user (UID 1000 to 59999) with the lowest UID
 
-Only this user sees the connection in NetworkManager and the profile in
-`netbird profile list`.
-
-On a machine without a matching user the connection is open to all users and
-the profile stays with root. The next run hands both to the user.
 
 ### Profile settings
 
@@ -148,6 +143,7 @@ in `netbird_packages` to let users log in with the desktop client.
 ## Requirements
 
 - The potos host needs to reach `netbird_repo_baseurl` to download the packages.
-- NetworkManager is running, unless `netbird_network_manager` is `false`.
+- NetworkManager is running, unless `netbird_network_manager` is `false`. The
+  role restarts it after the packages changed.
 - NetBird 0.83 or newer. The role enables the JSON API socket of the daemon
   (`/var/run/netbird-http.sock`) to manage the profile.

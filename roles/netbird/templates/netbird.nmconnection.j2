@@ -3,9 +3,6 @@ id={{ netbird_nm_connection_name }}
 uuid={{ netbird_nm_connection_uuid }}
 type=vpn
 autoconnect=false
-{% if netbird_nm_user %}
-permissions=user:{{ netbird_nm_user }}:;
-{% endif %}
 
 [vpn]
 service-type=org.freedesktop.NetworkManager.netbird
