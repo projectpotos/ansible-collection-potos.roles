@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    netbird_management_url: https://netbird.example.invalid
+    netbird_admin_url: https://netbird.example.invalid
+    netbird_profile_settings:
+      blockLanAccess: true
+      blockInbound: true
+      wireguardPort: 51821
+      disableFirewall: true
+  tasks:
+    - name: Run the netbird role
+      ansible.builtin.include_role:
+        name: projectpotos.roles.netbird

@@ -1,0 +1,14 @@
+[connection]
+id={{ netbird_nm_connection_name }}
+uuid={{ netbird_nm_connection_uuid }}
+type=vpn
+autoconnect=false
+
+[vpn]
+service-type=org.freedesktop.NetworkManager.netbird
+auth=sso
+management-url={{ netbird_management_url }}
+admin-url={{ netbird_admin_url }}
+{% if netbird_nm_user %}
+username={{ netbird_nm_user }}
+{% endif %}

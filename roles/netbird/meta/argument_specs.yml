@@ -1,11 +1,118 @@
 ---
-# argument spec file for projectpotos.roles.netbird
-
 argument_specs:
   main:
-    short_description: Role description.
+    short_description: Role to install the NetBird client on Potos Linux Clients.
+    description:
+      - Configures the NetBird package repository in
+        C(/etc/yum.repos.d/netbird.repo), installs the packages listed in
+        O(netbird_packages) and enables the C(netbird) service.
+      - Creates a NetworkManager VPN connection for the user of the machine,
+        who logs in through SSO when activating it.
+      - Creates the NetBird profile behind that connection, hands it to the
+        user and applies O(netbird_profile_settings) to it.
+      - Enables the JSON API socket of the NetBird daemon to manage the
+        profile.
+
     options:
-      netbird_my_variable:
+      netbird_repo_baseurl:
+        description: Base URL of the NetBird package repository.
         type: str
-        description: A simple string argument for demonstration.
-        default: "default_value"
+        required: false
+        default: https://pkgs.netbird.io/yum/
+      netbird_repo_gpgkey:
+        description: URL of the GPG key the repository is signed with.
+        type: str
+        required: false
+        default: https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+      netbird_repo_gpgcheck:
+        description: Verify package signatures.
+        type: bool
+        required: false
+        default: true
+      netbird_repo_repo_gpgcheck:
+        description: Verify repository metadata signatures.
+        type: bool
+        required: false
+        default: true
+      netbird_packages:
+        description:
+          - Packages to install. V(network-manager-netbird) is needed for
+            O(netbird_network_manager).
+          - Add V(netbird-ui) for the NetBird desktop client.
+        type: list
+        elements: str
+        required: false
+        default:
+          - netbird
+          - network-manager-netbird
+      netbird_management_url:
+        description: URL of the NetBird management service.
+        type: str
+        required: false
+        default: https://api.netbird.io
+      netbird_admin_url:
+        description:
+          - URL of the NetBird dashboard, on self-hosted servers usually the
+            same as O(netbird_management_url).
+          - Only used for the NetworkManager connection.
+        type: str
+        required: false
+        default: https://app.netbird.io
+      netbird_network_manager:
+        description:
+          - Create a NetworkManager VPN connection and its NetBird profile
+            C(nm-<uuid>).
+          - When V(false), O(netbird_management_url) and
+            O(netbird_profile_settings) are applied to the C(default) NetBird
+            profile instead.
+        type: bool
+        required: false
+        default: true
+      netbird_nm_connection_name:
+        description: Name of the NetworkManager connection.
+        type: str
+        required: false
+        default: NetBird
+      netbird_nm_connection_uuid:
+        description:
+          - UUID of the NetworkManager connection, the NetBird profile is
+            named C(nm-<uuid>) after it.
+          - Changing it leaves the old NetBird profile behind.
+        type: str
+        required: false
+        default: 5c33fb92-d200-48ba-8eba-5b6c0a9302c8
+      netbird_nm_username:
+        description:
+          - Name of the user the NetworkManager connection logs in for and who
+            owns the NetBird profile.
+          - When O(netbird_nm_username) and O(netbird_nm_uid) are empty, the
+            regular user (UID 1000 to 59999) with the lowest UID is used.
+          - Without a matching user the profile stays with root until the next
+            run.
+        type: str
+        required: false
+        default: ""
+      netbird_nm_uid:
+        description:
+          - UID of the user the NetworkManager connection logs in for and who
+            owns the NetBird profile, for example V(1000) for the first user
+            of every machine.
+          - Ignored when O(netbird_nm_username) is set.
+        type: str
+        required: false
+        default: ""
+      netbird_profile_settings:
+        description:
+          - Settings of the NetBird profile, named like the JSON fields of the
+            C(SetConfig) call of the NetBird daemon, for example
+            V(blockLanAccess), V(blockInbound), V(disableServerRoutes),
+            V(disableClientRoutes), V(disableDns), V(serverSSHAllowed),
+            V(rosenpassEnabled) or V(wireguardPort).
+          - Listed settings are enforced on every run, all others are left
+            to the user.
+          - Fields the daemon does not report back, like V(disableFirewall),
+            are sent on every run without being reported as changed.
+          - Unknown fields are ignored by the daemon.
+        type: dict
+        required: false
+        default: {}

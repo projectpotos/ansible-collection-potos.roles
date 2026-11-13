@@ -1,6 +1,29 @@
 ---
-# defaults file for projectpotos.roles.netbird
+# Package repository
+netbird_repo_baseurl: https://pkgs.netbird.io/yum/
+netbird_repo_gpgkey: https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+netbird_repo_gpgcheck: true
+netbird_repo_repo_gpgcheck: true
 
-# Variable that will be displayed in debug output
-# This demonstrates proper role variable naming with the 'netbird_' prefix
-netbird_my_variable: "default_value"
+# Packages to install
+netbird_packages:
+  - netbird
+  - netbird-ui
+  - gtk4
+  - webkitgtk6.0
+  - xdg-utils
+  - network-manager-netbird
+
+# NetBird server, users log in there through SSO
+netbird_management_url: https://api.netbird.io
+netbird_admin_url: https://app.netbird.io
+
+# NetworkManager VPN connection
+netbird_network_manager: true
+netbird_nm_connection_name: NetBird
+netbird_nm_connection_uuid: 5c33fb92-d200-48ba-8eba-5b6c0a9302c8
+netbird_nm_username: ""
+netbird_nm_uid: ""
+
+# Settings of the NetBird profile, named like the fields of the daemon's SetConfig call
+netbird_profile_settings: {}

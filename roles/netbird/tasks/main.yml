@@ -1,6 +1,135 @@
 ---
-# tasks file for projectpotos.roles.netbird
+- name: Configure the NetBird package repository
+  ansible.builtin.yum_repository:
+    name: netbird
+    file: netbird
+    description: NetBird
+    baseurl: "{{ netbird_repo_baseurl }}"
+    gpgkey: "{{ netbird_repo_gpgkey }}"
+    gpgcheck: "{{ netbird_repo_gpgcheck | bool }}"
+    repo_gpgcheck: "{{ netbird_repo_repo_gpgcheck | bool }}"
+    enabled: true
 
-- name: Display the value of netbird_my_variable
-  ansible.builtin.debug:
-    msg: "The value of netbird_my_variable is {{ netbird_my_variable }}"
+- name: Install NetBird
+  ansible.builtin.dnf:
+    name: "{{ netbird_packages }}"
+    state: present
+  notify: restart_nm
+
+- name: Enable and start the NetBird service
+  ansible.builtin.systemd_service:
+    name: netbird
+    enabled: true
+    state: started
+
+- name: Read the NetBird service parameters
+  ansible.builtin.slurp:
+    src: "{{ netbird_service_params_file }}"
+  register: netbird_service_params
+
+- name: Enable the JSON API socket of the NetBird daemon
+  ansible.builtin.command:
+    cmd: netbird service reconfigure --enable-json-socket
+  when: not ((netbird_service_params.content | b64decode | from_json).enable_json_socket | default(false))
+  changed_when: true
+
+- name: Configure the NetworkManager connection
+  when: netbird_network_manager | bool
+  block:
+    - name: Look up the local users
+      ansible.builtin.getent:
+        database: passwd
+
+    - name: Resolve the user of the NetBird connection
+      ansible.builtin.set_fact:
+        netbird_nm_user: >-
+          {%- set ns = namespace(name=netbird_nm_username, uid=60000) -%}
+          {%- if not ns.name and (netbird_nm_uid | string | length > 0) -%}
+          {%- set ns.name = ansible_facts.getent_passwd | dict2items
+              | selectattr('value.1', 'eq', netbird_nm_uid | string)
+              | map(attribute='key') | first | default('') -%}
+          {%- elif not ns.name -%}
+          {%- for name, entry in ansible_facts.getent_passwd.items() -%}
+          {%- if (entry[1] | int) >= 1000 and (entry[1] | int) < ns.uid -%}
+          {%- set ns.name = name -%}
+          {%- set ns.uid = entry[1] | int -%}
+          {%- endif -%}
+          {%- endfor -%}
+          {%- endif -%}
+          {{ ns.name }}
+
+    - name: Create the NetworkManager connection
+      ansible.builtin.template:
+        src: netbird.nmconnection.j2
+        dest: /etc/NetworkManager/system-connections/netbird.nmconnection
+        owner: root
+        group: root
+        mode: "0600"
+      notify: reload_nm_connections
+
+- name: Configure the NetBird profile
+  module_defaults:
+    ansible.builtin.uri:
+      unix_socket: "{{ netbird_api_socket }}"
+      method: POST
+      body_format: json
+  block:
+    - name: List the NetBird profiles
+      ansible.builtin.uri:
+        url: "{{ netbird_api_url }}/ListProfiles"
+        body: {}
+      register: netbird_profiles
+      until: netbird_profiles is success
+      retries: 10
+      delay: 2
+
+    - name: Create the NetBird profile
+      ansible.builtin.uri:
+        url: "{{ netbird_api_url }}/AddProfile"
+        body:
+          profileName: "{{ netbird_profile_name }}"
+      when: netbird_profile_name not in (netbird_profiles.json.profiles | map(attribute='name'))
+      changed_when: true
+
+    - name: Hand the NetBird profile to the user
+      ansible.builtin.uri:
+        url: "{{ netbird_api_url }}/ClaimProfile"
+        body:
+          handle: "{{ netbird_profile_name }}"
+          owner: "{{ netbird_nm_owner }}"
+      vars:
+        netbird_nm_owner: "uid:{{ ansible_facts.getent_passwd[netbird_nm_user][1] }}"
+      when:
+        - netbird_network_manager | bool
+        - netbird_nm_user | length > 0
+        - >-
+          netbird_nm_owner not in (netbird_profiles.json.profiles
+          | selectattr('name', 'eq', netbird_profile_name)
+          | map(attribute='owners') | flatten)
+      changed_when: true
+
+    - name: Read the NetBird profile settings
+      ansible.builtin.uri:
+        url: "{{ netbird_api_url }}/GetConfig"
+        body:
+          profileName: "{{ netbird_profile_name }}"
+      register: netbird_profile_config
+
+    - name: Apply the NetBird profile settings
+      ansible.builtin.uri:
+        url: "{{ netbird_api_url }}/SetConfig"
+        body: "{{ netbird_profile_wanted | combine({'profileName': netbird_profile_name}) }}"
+      vars:
+        netbird_profile_current: >-
+          {{ dict(netbird_profile_config.json.keys() | zip(netbird_profile_config.json.values()
+          | map('string') | map('lower') | map('regex_replace', ':443$', ''))) }}
+        netbird_profile_target: >-
+          {{ dict(netbird_profile_wanted.keys() | zip(netbird_profile_wanted.values()
+          | map('string') | map('lower') | map('regex_replace', ':443$', ''))) }}
+        netbird_profile_drift: >-
+          {{ netbird_profile_target | dict2items | difference(netbird_profile_current | dict2items)
+          | map(attribute='key') | select('in', netbird_profile_current.keys()) }}
+      when: >-
+        netbird_profile_drift | length > 0
+        or (netbird_profile_wanted.keys() | difference(netbird_profile_config.json.keys()) | length > 0)
+      changed_when: netbird_profile_drift | length > 0

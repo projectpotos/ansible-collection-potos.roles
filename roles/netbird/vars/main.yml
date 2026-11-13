@@ -1,2 +1,9 @@
 ---
-# vars file for projectpotos.roles.netbird
+netbird_api_socket: /var/run/netbird-http.sock
+netbird_api_url: http://localhost/daemon.DaemonService
+netbird_service_params_file: /var/lib/netbird/service.json
+
+netbird_profile_name: >-
+  {{ ('nm-' ~ netbird_nm_connection_uuid) if (netbird_network_manager | bool) else 'default' }}
+netbird_profile_wanted: >-
+  {{ {'managementUrl': netbird_management_url} | combine(netbird_profile_settings) }}
