@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- {{ ansible_managed }} -->
+<zone>
+  <short>{{ firewalld_potos_zone_name }}</short>
+  <description>Unsolicited incoming network packets are rejected from port 1 to 1024, except for select network services. Incoming packets that are related to outgoing network connections are accepted. Outgoing network connections are allowed.</description>
+{% for service in (firewalld_services + firewalld_host_services) | unique %}
+  <service name="{{ service }}"/>
+{% endfor %}
+{% for port in (firewalld_tcp_ports + firewalld_host_tcp_ports) | unique %}
+  <port protocol="tcp" port="{{ port }}"/>
+{% endfor %}
+{% for port in (firewalld_udp_ports + firewalld_host_udp_ports) | unique %}
+  <port protocol="udp" port="{{ port }}"/>
+{% endfor %}
+{% for icmp_type in __firewalld_icmp_blocks | difference(firewalld_icmp_allowed + firewalld_host_icmp_allowed) | sort %}
+  <icmp-block name="{{ icmp_type }}"/>
+{% endfor %}
+</zone>
