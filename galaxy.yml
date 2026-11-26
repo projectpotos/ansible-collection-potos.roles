@@ -15,7 +15,8 @@ license_file: LICENSE
 
 # TO-DO: update the tags based on your content type
 tags: ["linux", "tools"]
-dependencies: {}
+dependencies:
+  ansible.posix: ">=1.0.0"
 
 repository: https://github.com/projectpotos/ansible-collection-potos.roles
 documentation: https://potos.dev/docs

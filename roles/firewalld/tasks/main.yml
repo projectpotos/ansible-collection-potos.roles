@@ -1,0 +1,31 @@
+---
+- name: Firewalld - Get available icmp types
+  ansible.builtin.command:
+    cmd: firewall-cmd --get-icmptypes
+  register: __firewalld_icmptypes_result
+  changed_when: false
+  check_mode: false
+
+- name: Firewalld - Set icmp types fact
+  ansible.builtin.set_fact:
+    __firewalld_icmp_blocks: "{{ __firewalld_icmptypes_result.stdout.split() }}"
+
+# --------------------------------------------------------------------------------
+
+- name: Template - Write custom firewalld config
+  ansible.builtin.template:
+    src: firewalld.conf.j2
+    dest: "/etc/firewalld/firewalld.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Firewalld - Reload
+
+- name: Template - Write custom firewalld zone
+  ansible.builtin.template:
+    src: zone.xml.j2
+    dest: "/etc/firewalld/zones/{{ firewalld_potos_zone_name }}.xml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Firewalld - Reload

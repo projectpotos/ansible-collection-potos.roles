@@ -1,0 +1,47 @@
+---
+# argument spec file for projectpotos.roles.firewalld
+
+argument_specs:
+  main:
+    short_description: Manage open ports and allowed ICMP types with firewalld.
+    options:
+      firewalld_tcp_ports:
+        type: list
+        elements: str
+        default: []
+        description: TCP ports (or port ranges like C(8000-8010)) to open.
+      firewalld_udp_ports:
+        type: list
+        elements: str
+        default: []
+        description: UDP ports (or port ranges) to open.
+      firewalld_icmp_allowed:
+        type: list
+        elements: str
+        default:
+          - echo-request
+          - echo-reply
+          - destination-unreachable
+          - fragmentation-needed
+          - packet-too-big
+          - time-exceeded
+          - parameter-problem
+          - neighbour-solicitation
+          - neighbour-advertisement
+          - router-advertisement
+        description: ICMP types to allow. All other ICMP types known to firewalld are blocked.
+      firewalld_host_tcp_ports:
+        type: list
+        elements: str
+        default: []
+        description: Additional host-specific TCP ports to open.
+      firewalld_host_udp_ports:
+        type: list
+        elements: str
+        default: []
+        description: Additional host-specific UDP ports to open.
+      firewalld_host_icmp_allowed:
+        type: list
+        elements: str
+        default: []
+        description: Additional host-specific ICMP types to allow.

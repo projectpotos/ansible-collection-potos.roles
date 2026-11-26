@@ -1,0 +1,21 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Stat - Get stats abt the potos zone file
+      ansible.builtin.stat:
+        path: /etc/firewalld/zones/potos.xml
+      register: firewalld_zone_file
+
+    - name: Assert - Ensure the potos zone file is present
+      ansible.builtin.assert:
+        that:
+          - firewalld_zone_file.stat.exists
+        fail_msg: "missing zone file: /etc/firewalld/zones/potos.xml"
+
+    - name: Command - Validate the permanent firewalld configuration
+      ansible.builtin.command:
+        cmd: firewall-cmd --check-config
+      changed_when: false
