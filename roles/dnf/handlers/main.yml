@@ -1,0 +1,9 @@
+---
+- name: Restart PackageKit # noqa: command-instead-of-module
+  ansible.builtin.command:
+    cmd: systemctl try-restart packagekit.service
+  listen: restart_packagekit
+  register: dnf_packagekit_restart
+  changed_when: dnf_packagekit_restart.rc == 0
+  # rc 5: PackageKit is not installed
+  failed_when: dnf_packagekit_restart.rc not in [0, 5]

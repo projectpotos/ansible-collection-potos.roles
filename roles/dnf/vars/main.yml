@@ -1,0 +1,5 @@
+---
+dnf_enabled_ids: >-
+  {{ (dnf_repositories | rejectattr('enabled', 'defined') | list
+  + dnf_repositories | selectattr('enabled', 'defined') | selectattr('enabled') | list)
+  | map(attribute='id') | list + dnf_enabled_unmanaged }}

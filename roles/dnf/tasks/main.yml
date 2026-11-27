@@ -1,0 +1,53 @@
+---
+- name: Make sure at least one repo is enabled
+  ansible.builtin.assert:
+    that:
+      - dnf_enabled_ids | length > 0
+    fail_msg: >-
+      No repository would remain enabled, set dnf_repositories or
+      dnf_enabled_unmanaged.
+    quiet: true
+
+- name: Install managed repositories
+  ansible.builtin.template:
+    src: etc/yum.repos.d/potos.repo
+    dest: /etc/yum.repos.d/potos.repo
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart_packagekit
+
+- name: Disable all repositories
+  ansible.builtin.template:
+    src: etc/dnf/repos.override.d/00-potos-disable-all.repo
+    dest: /etc/dnf/repos.override.d/00-potos-disable-all.repo
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart_packagekit
+
+- name: Enable managed repositories
+  ansible.builtin.template:
+    src: etc/dnf/repos.override.d/50-potos-managed.repo
+    dest: /etc/dnf/repos.override.d/50-potos-managed.repo
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart_packagekit
+
+- name: Install package excludes
+  ansible.builtin.template:
+    src: etc/dnf/libdnf5.conf.d/50-potos.conf
+    dest: /etc/dnf/libdnf5.conf.d/50-potos.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: dnf_excludes | length > 0
+  notify: restart_packagekit
+
+- name: Remove package excludes
+  ansible.builtin.file:
+    path: /etc/dnf/libdnf5.conf.d/50-potos.conf
+    state: absent
+  when: dnf_excludes | length == 0
+  notify: restart_packagekit

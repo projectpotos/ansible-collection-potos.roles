@@ -1,0 +1,25 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    dnf_repositories:
+      - id: cerebro
+        name: Cerebro
+        baseurl: https://pulp.xavier.example/pulp/content/cerebro/$releasever/
+        gpgkey: https://pulp.xavier.example/keys/cerebro.asc
+        options:
+          metadata_expire: 1h
+      - id: danger-room
+        baseurl: https://pulp.xavier.example/pulp/content/danger-room/
+        enabled: false
+    dnf_enabled_unmanaged:
+      - mystique
+    dnf_excludes:
+      - sentinel*
+      - cerebro-legacy
+  tasks:
+    - name: Run the dnf role
+      ansible.builtin.include_role:
+        name: projectpotos.roles.dnf
