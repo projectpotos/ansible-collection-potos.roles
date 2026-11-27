@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+{% for repo in dnf_repositories %}
+
+[{{ repo.id }}]
+name={{ repo.name | default(repo.id) }}
+baseurl={{ repo.baseurl }}
+enabled={{ repo.enabled | default(true) | bool | int }}
+gpgcheck={{ repo.gpgcheck | default(true) | bool | int }}
+{% if repo.gpgkey is defined %}
+gpgkey={{ repo.gpgkey }}
+{% endif %}
+{% for key, value in ({'countme': 0} | combine(repo.options | default({}))).items() %}
+{{ key }}={{ value }}
+{% endfor %}
+{% endfor %}

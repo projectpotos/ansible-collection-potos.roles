@@ -1,0 +1,40 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: List the enabled repositories
+      ansible.builtin.command:
+        cmd: dnf repo list --enabled --json
+      register: dnf_enabled
+      changed_when: false
+
+    - name: Only the managed and the allowed repositories are enabled
+      ansible.builtin.assert:
+        that:
+          - dnf_enabled.stdout | from_json | map(attribute='id') | sort == ['cerebro', 'mystique']
+
+    - name: Read the main dnf config
+      ansible.builtin.command:
+        cmd: dnf --dump-main-config
+      register: dnf_main
+      changed_when: false
+
+    - name: The excludes are in effect
+      ansible.builtin.assert:
+        that:
+          - dnf_main.stdout is regex('(?m)^excludepkgs = sentinel\*, ?cerebro-legacy$')
+
+    - name: Read the configuration of the managed repository
+      ansible.builtin.command:
+        cmd: dnf --dump-repo-config=cerebro
+      register: dnf_cerebro
+      changed_when: false
+
+    - name: The repository options are applied
+      ansible.builtin.assert:
+        that:
+          - dnf_cerebro.stdout is regex('(?m)^gpgcheck = 1$')
+          - dnf_cerebro.stdout is regex('(?m)^countme = 0$')
+          - dnf_cerebro.stdout is regex('(?m)^metadata_expire = 3600$')

@@ -1,0 +1,9 @@
+---
+# Repositories to manage, every other repository on the client is disabled
+dnf_repositories: []
+
+# IDs of repositories not managed by this role that stay enabled
+dnf_enabled_unmanaged: []
+
+# Packages excluded from all dnf operations
+dnf_excludes: []

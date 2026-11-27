@@ -1,0 +1,71 @@
+---
+argument_specs:
+  main:
+    short_description: Role to manage dnf repositories of Potos Linux Clients.
+    description:
+      - Makes O(dnf_repositories) the only package sources of the client.
+        The repositories are written to C(/etc/yum.repos.d/potos.repo) and
+        every other repository is disabled through
+        C(/etc/dnf/repos.override.d), including the stock Fedora ones and
+        any repository file added later by a package or by hand.
+      - The role fails without changing anything if no repository would
+        remain enabled.
+
+    options:
+      dnf_repositories:
+        description:
+          - Repositories to manage. Repositories removed from this list are
+            removed from the client.
+        type: list
+        elements: dict
+        required: false
+        default: []
+        options:
+          id:
+            description: Repository ID.
+            type: str
+            required: true
+          name:
+            description: Human readable name, defaults to the ID.
+            type: str
+            required: false
+          baseurl:
+            description: URL of the repository.
+            type: str
+            required: true
+          enabled:
+            description: Whether the repository is enabled.
+            type: bool
+            required: false
+            default: true
+          gpgcheck:
+            description: Whether package signatures are verified.
+            type: bool
+            required: false
+            default: true
+          gpgkey:
+            description: URL or path of the key the packages are signed with.
+            type: str
+            required: false
+          options:
+            description:
+              - Any other dnf repository option, e.g. V(metadata_expire) or
+                V(sslclientcert).
+            type: dict
+            required: false
+            default: {}
+      dnf_enabled_unmanaged:
+        description:
+          - IDs of repositories not managed by this role that stay enabled,
+            e.g. V(fedora-cisco-openh264). Globs are allowed.
+        type: list
+        elements: str
+        required: false
+        default: []
+      dnf_excludes:
+        description:
+          - Packages excluded from all dnf operations, globs are allowed.
+        type: list
+        elements: str
+        required: false
+        default: []

@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+{% for id in dnf_enabled_ids %}
+
+[{{ id }}]
+enabled=1
+{% endfor %}
